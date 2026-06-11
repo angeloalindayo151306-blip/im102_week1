@@ -1,83 +1,78 @@
 <?php
-$servername = "localhost";
-$username = "root";
-$password = "";
-$database = "im102_week1";
+require_once 'config.php';
 
-$conn = new mysqli($servername, $username, $password, $database);
-
-
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $name = $_POST['name'];
-    $course = $_POST['course'];
-    $year = $_POST['year'];
-
-    $sql = "INSERT INTO students (name, course, year)
-            VALUES ('$name', '$course', '$year')";
-    
-    $conn->query($sql);
-}
-
-$result = $conn->query("SELECT * FROM students");
+$sql = "SELECT * FROM students ORDER BY id ASC";
+$result = $conn->query($sql);
 ?>
-
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Students List</title>
-    <style>
-        body { font-family: Arial; margin: 40px; }
-        table { border-collapse: collapse; width: 70%; }
-        th, td { border: 1px solid black; padding: 8px; text-align: center; }
-        th { background-color: #f2f2f2; }
-        form { margin-top: 20px; }
-        input { margin: 5px; padding: 5px; }
-    </style>
+    <title>Student List</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h2>Students List</h2>
+<div class="container">
+    <h1>Student List</h1>
 
-<table>
-    <tr>
-        <th>ID</th>
-        <th>Name</th>
-        <th>Course</th>
-        <th>Year</th>
-    </tr>
+    <p>
+        <a href="add.php" style="
+            display: inline-block;
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        ">
+            + Add Student
+        </a>
+    </p>
 
-    <?php
-    if ($result->num_rows > 0) {
-        while ($row = $result->fetch_assoc()) {
-            echo "<tr>
-                    <td>{$row['id']}</td>
-                    <td>{$row['name']}</td>
-                    <td>{$row['course']}</td>
-                    <td>{$row['year']}</td>
-                  </tr>";
-        }
-    } else {
-        echo "<tr><td colspan='4'>No students found</td></tr>";
-    }
-    ?>
-</table>
+    <!-- TABLE WRAPPER (prevents breaking) -->
+    <div class="table-wrapper">
+        <table>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Course</th>
+                <th>Year</th>
+                <th>Email</th>
+                <th>Address</th>
+                <th>Date Added</th>
+                <th>Actions</th>
+            </tr>
 
-<h3>Add New Student</h3>
+            <?php while ($row = $result->fetch_assoc()): ?>
+            <tr>
+                <td><?= $row['id'] ?></td>
+                <td><?= htmlspecialchars($row['name']) ?></td>
+                <td><?= htmlspecialchars($row['course']) ?></td>
+                <td><?= $row['year'] ?></td>
+                <td><?= htmlspecialchars($row['email'] ?? '') ?></td>
+                <td><?= htmlspecialchars($row['address'] ?? '') ?></td>
+                <td><?= $row['created_at'] ?></td>
+                <td>
+                    <a href="edit.php?id=<?= $row['id'] ?>"
+                       style="color:#2196F3; text-decoration:none; margin-right:10px;">
+                        Edit
+                    </a>
 
-<form method="POST">
-    <input type="text" name="name" placeholder="Name" required>
-    <input type="text" name="course" placeholder="Course" required>
-    <input type="number" name="year" placeholder="Year" required>
-    <input type="submit" value="Add Student">
-</form>
+                    <a href="delete.php?id=<?= $row['id'] ?>"
+                       style="color:#f44336; text-decoration:none;"
+                       onclick="return confirm('Delete <?= htmlspecialchars(addslashes($row['name'])) ?>?')">
+                        Delete
+                    </a>
+                </td>
+            </tr>
+            <?php endwhile; ?>
+        </table>
+    </div>
+
+    <p style="margin-top:15px;">
+        Total: <?= $result->num_rows ?> student(s)
+    </p>
+
+</div>
 
 </body>
 </html>
-
-<?php
-$conn->close();
-?>
